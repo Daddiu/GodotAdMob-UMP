@@ -4,8 +4,8 @@
 
 apply plugin: 'com.android.library'
 
-ext.pluginVersionCode = 1
-ext.pluginVersionName = "1.0"
+ext.pluginVersionCode = 2
+ext.pluginVersionName = "1.01"
 
 android {
     compileSdkVersion 30

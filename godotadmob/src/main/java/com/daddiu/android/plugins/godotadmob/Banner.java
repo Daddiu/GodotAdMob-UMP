@@ -18,7 +18,7 @@ import com.google.android.gms.ads.LoadAdError;
 
 interface BannerListener {
         void onBannerLoaded();
-        void onBannerFailedToLoad(int errorCode);
+        void onBannerFailedToLoad(LoadAdError error);
     }
 
     public class Banner {
@@ -48,7 +48,7 @@ interface BannerListener {
                 @Override
                 public void onAdFailedToLoad(LoadAdError adError) {
                     Log.w("godot", "AdMob: onAdFailedToLoad. errorCode: " + adError.getCode());
-                    defaultBannerListener.onBannerFailedToLoad(adError.getCode());
+                    defaultBannerListener.onBannerFailedToLoad(adError);
                 }
             });
         }

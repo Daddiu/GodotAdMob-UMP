@@ -14,8 +14,8 @@ import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback;
 
 interface GodotInterstitialListener {
     void onInterstitialLoaded();
-    void onInterstitialFailedToLoad(int errorCode);
-    void onInterstitialFailedToShow(int errorCode);
+    void onInterstitialFailedToLoad(LoadAdError error);
+    void onInterstitialFailedToShow(AdError error);
     void onInterstitialOpened();
     void onInterstitialDismissed();
 }
@@ -43,7 +43,7 @@ public class Interstitial {
                     @Override
                     public void onAdFailedToLoad(@NonNull LoadAdError loadAdError) {
                         mInterstitialAd = null;
-                        mListener.onInterstitialFailedToLoad(loadAdError.getCode());
+                        mListener.onInterstitialFailedToLoad(loadAdError);
                     }
                 });
     }
@@ -60,7 +60,7 @@ public class Interstitial {
                 @Override
                 public void onAdFailedToShowFullScreenContent(AdError adError) {
                     // Called when fullscreen content failed to show.
-                    mListener.onInterstitialFailedToShow(adError.getCode());
+                    mListener.onInterstitialFailedToShow(adError);
                 }
 
                 @Override

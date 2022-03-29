@@ -17,8 +17,8 @@ import com.google.android.gms.ads.rewarded.RewardedAdLoadCallback;
 
 interface GodotRewardedVideoListener {
    void onRewardedVideoLoaded();
-   void onRewardedVideoFailedToLoad(int errorCode);
-   void onRewardedVideoFailedToShow(int errorCode);
+   void onRewardedVideoFailedToLoad(LoadAdError error);
+   void onRewardedVideoFailedToShow(AdError error);
    void onRewardedVideoOpened();
    void onRewardedVideoDismissed();
    void onRewardedVideoEarnedReward(String type, int amount);
@@ -42,15 +42,12 @@ public class RewardedVideo {
                 adRequest, new RewardedAdLoadCallback() {
                     @Override
                     public void onAdFailedToLoad(@NonNull LoadAdError loadAdError) {
-                        // Handle the error.
-                        Log.d("godot", "AdMob: "+ String.format("onAdFailedToLoad, error: %d" ,loadAdError.getCode()));
                         mRewardedAd = null;
-                        mListener.onRewardedVideoFailedToLoad(loadAdError.getCode());
+                        mListener.onRewardedVideoFailedToLoad(loadAdError);
                     }
                     @Override
                     public void onAdLoaded(@NonNull RewardedAd rewardedAd) {
                         mRewardedAd = rewardedAd;
-                        Log.d("godot", "AdMob: RewardedAd was loaded.");
                         mListener.onRewardedVideoLoaded();
                     }
                 });
@@ -72,7 +69,7 @@ public class RewardedVideo {
                             // Called when ad fails to show.
                             Log.d("godot", "AdMob:" + String.format("onAdFailedToShowFullScreenContent, error: %d" ,adError.getCode()));
                             mRewardedAd = null;
-                            mListener.onRewardedVideoFailedToShow(adError.getCode());
+                            mListener.onRewardedVideoFailedToShow(adError);
                         }
 
                         @Override
