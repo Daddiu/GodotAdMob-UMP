@@ -37,7 +37,7 @@ public class Interstitial {
                     public void onAdLoaded(@NonNull InterstitialAd interstitialAd) {
                         mInterstitialAd = interstitialAd;
                         mListener.onInterstitialLoaded();
-                        Log.d("godot", "AdMob: onAdLoaded");
+                        Log.i("godot", "AdMob: onAdLoaded");
                     }
 
                     @Override

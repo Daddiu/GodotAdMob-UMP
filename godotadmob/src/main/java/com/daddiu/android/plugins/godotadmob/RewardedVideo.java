@@ -60,14 +60,14 @@ public class RewardedVideo {
                         @Override
                         public void onAdShowedFullScreenContent() {
                             // Called when ad is shown.
-                            Log.d("godot", "AdMob: onAdShowedFullScreenContent");
+                            Log.i("godot", "AdMob: onAdShowedFullScreenContent");
                             mListener.onRewardedVideoOpened();
                         }
 
                         @Override
                         public void onAdFailedToShowFullScreenContent(AdError adError) {
                             // Called when ad fails to show.
-                            Log.d("godot", "AdMob:" + String.format("onAdFailedToShowFullScreenContent, error: %d" ,adError.getCode()));
+                            Log.i("godot", "AdMob:" + String.format("onAdFailedToShowFullScreenContent, error: %d" ,adError.getCode()));
                             mRewardedAd = null;
                             mListener.onRewardedVideoFailedToShow(adError);
                         }
@@ -78,7 +78,7 @@ public class RewardedVideo {
                             // Don't forget to set the ad reference to null so you
                             // don't show the ad a second time.
                             mRewardedAd = null;
-                            Log.d("godot", "AdMob: onAdDismissedFullScreenContent");
+                            Log.i("godot", "AdMob: onAdDismissedFullScreenContent");
                             //MainActivity.this.loadRewardedAd();
                             mListener.onRewardedVideoDismissed();
                         }
@@ -88,14 +88,14 @@ public class RewardedVideo {
                 @Override
                 public void onUserEarnedReward(@NonNull RewardItem rewardItem) {
                     // Handle the reward.
-                    Log.d("godot", "AdMob: onUserEarnedReward");
+                    Log.i("godot", "AdMob: onUserEarnedReward");
                     int rewardAmount = rewardItem.getAmount();
                     String rewardType = rewardItem.getType();
                     mListener.onRewardedVideoEarnedReward(rewardType,rewardAmount);
                 }
             });
         } else {
-            Log.d("godot", "AdMob: The rewarded ad wasn't ready yet.");
+            Log.i("godot", "AdMob: The rewarded ad wasn't ready yet.");
         }
     }
 

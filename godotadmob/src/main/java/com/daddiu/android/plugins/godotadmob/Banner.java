@@ -65,7 +65,7 @@ interface BannerListener {
 
             adView.setVisibility(View.VISIBLE);
             adView.resume();
-            Log.d("godot", "AdMob: Show Banner");
+            Log.i("godot", "AdMob: Show Banner");
         }
 
         public void move(final boolean isOnTop)
@@ -80,7 +80,7 @@ interface BannerListener {
             String id = adView.getAdUnitId();
             AddBanner(id, (isOnTop ? Gravity.TOP : Gravity.BOTTOM), adView.getAdSize(), adListener);
 
-            Log.d("godot", "AdMob: Banner Moved");
+            Log.i("godot", "AdMob: Banner Moved");
         }
 
         public void resize() {
@@ -94,7 +94,7 @@ interface BannerListener {
             String id = adView.getAdUnitId();
             AddBanner(id, adParams.gravity, getAdSize(bannerSize), adListener);
 
-            Log.d("godot", "AdMob: Banner Resized");
+            Log.i("godot", "AdMob: Banner Resized");
         }
 
         private void AddBanner(final String id, final int gravity, final AdSize size, final AdListener listener) {
@@ -128,7 +128,7 @@ interface BannerListener {
             if (adView.getVisibility() == View.GONE) return;
             adView.setVisibility(View.GONE);
             adView.pause();
-            Log.d("godot", "AdMob: Hide Banner");
+            Log.i("godot", "AdMob: Hide Banner");
         }
 
         private AdSize getAdaptiveAdSize() {
