@@ -370,26 +370,28 @@ public class GodotAdMob extends GodotPlugin {
     }
 
     private void initWithContentRating() {
-        MobileAds.initialize(activity);
+        activity.runOnUiThread(() -> {
+            MobileAds.initialize(activity);
 
-        this.setRequestConfigurations();
+            this.setRequestConfigurations();
 
-        if (!isPersonalizedPreferenceSet()) {
-            //NON-EEA USERS ONLY will arrive here without having a preference set and a form not required, so it's safe to assume you can show them personalized ads
-            setPersonalizedPreference(PersonalizedValues.PERSONALIZED.getValue());
-        }
-
-        int value = getPersonalizedPreferenceSaved();
-        boolean bool = (value == PersonalizedValues.PERSONALIZED.getValue());
-        if (!bool) {
-            if (extras == null) {
-                extras = new Bundle();
+            if (!isPersonalizedPreferenceSet()) {
+                //NON-EEA USERS ONLY will arrive here without having a preference set and a form not required, so it's safe to assume you can show them personalized ads
+                setPersonalizedPreference(PersonalizedValues.PERSONALIZED.getValue());
             }
-            extras.putString("npa", "1");
-        }
 
-        Log.i("godot", String.format("AdMob: init with content rating: %s (is real: %s, is child directed : %s, personalized ads: %s) ",maxAdContentRating,isReal,isForChildDirectedTreatment,bool));
-        initialized = true;
+            int value = getPersonalizedPreferenceSaved();
+            boolean bool = (value == PersonalizedValues.PERSONALIZED.getValue());
+            if (!bool) {
+                if (extras == null) {
+                    extras = new Bundle();
+                }
+                extras.putString("npa", "1");
+            }
+
+            Log.i("godot", String.format("AdMob: init with content rating: %s (is real: %s, is child directed : %s, personalized ads: %s) ", maxAdContentRating, isReal, isForChildDirectedTreatment, bool));
+            initialized = true;
+        });
     }
 
 
