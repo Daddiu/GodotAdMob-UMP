@@ -2,12 +2,20 @@ package com.daddiu.android.plugins.godotadmob;
 
 import android.app.Activity;
 import android.graphics.Color;
+import android.graphics.Insets;
+import android.graphics.Rect;
+import android.os.Build;
 import android.util.DisplayMetrics;
 import android.util.Log;
+import android.util.Size;
 import android.view.Display;
 import android.view.Gravity;
 import android.view.View;
+import android.view.WindowInsets;
+import android.view.WindowMetrics;
 import android.widget.FrameLayout;
+
+import android.content.res.Configuration;
 
 import com.google.android.gms.ads.AdListener;
 import com.google.android.gms.ads.AdRequest;
@@ -133,12 +141,32 @@ interface BannerListener {
 
         private AdSize getAdaptiveAdSize() {
             // Determine the screen width (less decorations) to use for the ad width.
-            Display display = activity.getWindowManager().getDefaultDisplay();
-            DisplayMetrics outMetrics = new DisplayMetrics();
-            display.getMetrics(outMetrics);
+            Display display = null;
+            float widthPixels = 0;
+            float density = 0;
 
-            float widthPixels = outMetrics.widthPixels;
-            float density = outMetrics.density;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                display = activity.getDisplay();
+                WindowMetrics metrics = activity.getWindowManager().getCurrentWindowMetrics();
+                // Gets all excluding insets
+                final WindowInsets windowInsets = metrics.getWindowInsets();
+                Insets insets = windowInsets.getInsetsIgnoringVisibility(WindowInsets.Type.navigationBars()
+                                        | WindowInsets.Type.displayCutout());
+
+                int insetsWidth = insets.right + insets.left;
+                int insetsHeight = insets.top + insets.bottom;
+                // Legacy size that Display#getSize reports
+                final Rect bounds = metrics.getBounds();
+                widthPixels = bounds.width();
+                density =  activity.getResources().getConfiguration().densityDpi;
+
+            } else {
+                display = activity.getWindowManager().getDefaultDisplay();
+                DisplayMetrics outMetrics = new DisplayMetrics();
+                display.getMetrics(outMetrics);
+                widthPixels = outMetrics.widthPixels;
+                density = outMetrics.density;
+            }
 
             int adWidth = (int) (widthPixels / density);
 

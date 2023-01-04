@@ -8,12 +8,12 @@ ext.pluginVersionCode = 2
 ext.pluginVersionName = "1.01"
 
 android {
-    compileSdkVersion 30
+    compileSdkVersion 32
     buildToolsVersion "30.0.3"
 
     defaultConfig {
-        minSdkVersion 16
-        targetSdkVersion 30
+        minSdkVersion 19
+        targetSdkVersion 32
         versionCode pluginVersionCode
         versionName pluginVersionName
 
@@ -42,19 +42,16 @@ android {
 }
 
 dependencies {
-    implementation 'androidx.appcompat:appcompat:1.4.1'
-//    implementation 'com.google.android.material:material:1.3.0'
     implementation 'com.google.android.ump:user-messaging-platform:2.0.0'
-    implementation 'com.google.android.gms:play-services-ads:20.4.0'
-    testImplementation 'junit:junit:4.13.2'
-    androidTestImplementation 'androidx.test.ext:junit:1.1.3'
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
-    compileOnly files('godot-lib/godot-lib.3.4.stable.release.aar')
+    implementation 'com.google.android.gms:play-services-ads:21.4.0'
+    implementation 'androidx.preference:preference:1.2.0'
+    compileOnly files('godot-lib/godot-lib.3.5.1.stable.release.aar')
 }
 
 configurations.all {
     resolutionStrategy {
-        force 'androidx.core:core:1.6.0'
+        force 'androidx.work:work-runtime:2.7.1'
+        force 'androidx.core:core:1.9.0'
     }
 }
 
