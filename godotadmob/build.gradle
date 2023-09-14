@@ -1,19 +1,16 @@
-//plugins {
-//    id 'com.android.application'
-//}
 
 apply plugin: 'com.android.library'
 
-ext.pluginVersionCode = 2
-ext.pluginVersionName = "1.01"
+ext.pluginVersionCode = 3
+ext.pluginVersionName = "1.02"
 
 android {
-    compileSdkVersion 32
+    compileSdkVersion 33
     buildToolsVersion "30.0.3"
 
     defaultConfig {
         minSdkVersion 19
-        targetSdkVersion 32
+        targetSdkVersion 33
         versionCode pluginVersionCode
         versionName pluginVersionName
 
@@ -42,10 +39,10 @@ android {
 }
 
 dependencies {
-    implementation 'com.google.android.ump:user-messaging-platform:2.0.0'
-    implementation 'com.google.android.gms:play-services-ads:21.4.0'
-    implementation 'androidx.preference:preference:1.2.0'
-    compileOnly files('godot-lib/godot-lib.3.5.1.stable.release.aar')
+    implementation 'com.google.android.ump:user-messaging-platform:2.1.0'
+    implementation 'com.google.android.gms:play-services-ads:22.3.0'
+    implementation 'androidx.preference:preference:1.2.1'
+    compileOnly files('godot-lib/godot-lib.3.5.2.stable.release.aar')
 }
 
 configurations.all {

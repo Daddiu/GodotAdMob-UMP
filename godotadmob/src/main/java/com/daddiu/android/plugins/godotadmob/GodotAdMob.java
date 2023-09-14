@@ -1,21 +1,40 @@
 package com.daddiu.android.plugins.godotadmob;
 
+//based on https://github.com/Shin-NiL/Godot-Android-Admob-Plugin/
+
+/*MIT License
+
+        Copyright (c) 2023 Daddiu
+
+        Permission is hereby granted, free of charge, to any person obtaining a copy
+        of this software and associated documentation files (the "Software"), to deal
+        in the Software without restriction, including without limitation the rights
+        to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+        copies of the Software, and to permit persons to whom the Software is
+        furnished to do so, subject to the following conditions:
+
+        The above copyright notice and this permission notice shall be included in all
+        copies or substantial portions of the Software.
+
+        THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+        IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+        FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+        AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+        LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+        OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+        SOFTWARE.
+*/
+
 import android.app.Activity;
-import android.content.Context;
-import android.content.SharedPreferences;
-import android.os.Bundle;
 import android.provider.Settings;
 import android.util.Log;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.FrameLayout;
 
-import androidx.preference.PreferenceManager;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.collection.ArraySet;
 
-import com.google.ads.mediation.admob.AdMobAdapter;
 import com.google.android.gms.ads.AdError;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.LoadAdError;
@@ -29,13 +48,11 @@ import org.godotengine.godot.plugin.UsedByGodot;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
-import com.google.android.ump.ConsentDebugSettings;
 import com.google.android.ump.ConsentForm;
 import com.google.android.ump.ConsentInformation;
 import com.google.android.ump.ConsentRequestParameters;
@@ -45,49 +62,28 @@ import com.google.android.ump.UserMessagingPlatform;
 import static com.google.android.gms.ads.RequestConfiguration.TAG_FOR_CHILD_DIRECTED_TREATMENT_TRUE;
 
 
-interface FormCallBackListener
-{
-    void onFormFailedToLoad(int errorCode);
-    void onFormDismissed();
-    void onFormNotRequired();
-}
-
 interface ConsentInformationUpdateListener
 {
     void onUpdateFailed(int errorCode);
     void onUpdateSuccessful();
 }
 
+interface FormCallBackListener
+{
+    void onFormFailedToLoad(int errorCode);
+    void onFormSuccessfullyDismissed();
+}
+
 
 public class GodotAdMob extends GodotPlugin {
 
-    enum PersonalizedValues {
-        NOT_SET(-1),
-        NOT_PERSONALIZED(0),
-        PERSONALIZED(1);
-
-        private int value = -1;
-        PersonalizedValues(int value)
-        {
-            this.value = value;
-        }
-        public int getValue() {
-            return value;
-        }
-    }
-
-
-    final private String SAVED_ID = "PersonalizedAds";
     private Activity activity = null; // The main activity of the game
 
-    private ConsentInformation consentInformation;
-    private ConsentForm consentForm;
-
+    private ConsentInformation consentInformation = null;
 
     private boolean isReal = false; // Store if is real or not
     private boolean isForChildDirectedTreatment = false; // Store if is children directed treatment desired
     private String maxAdContentRating = ""; // Store maxAdContentRating ("G", "PG", "T" or "MA")
-    private Bundle extras = null;
 
     private FrameLayout layout = null; // Store the layout
 
@@ -96,6 +92,7 @@ public class GodotAdMob extends GodotPlugin {
     private Banner banner = null; // Banner object
 
     private boolean initialized = false;
+
 
     public GodotAdMob(Godot godot) {
         super(godot);
@@ -142,87 +139,9 @@ public class GodotAdMob extends GodotPlugin {
         signals.add(new SignalInfo("on_form_dismissed"));
         signals.add(new SignalInfo("on_form_failed_to_load",Integer.class));
 
-        signals.add(new SignalInfo("manage_consent_aborted",Integer.class));
+
 
         return signals;
-    }
-
-    private void setPersonalizedPreference(int value) {
-        SharedPreferences sharedPref = activity.getPreferences(Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = sharedPref.edit();
-        editor.putInt(SAVED_ID, value);
-        editor.apply();
-    }
-
-    private boolean isPersonalizedPreferenceSet() {
-        SharedPreferences sharedPref = activity.getPreferences(Context.MODE_PRIVATE);
-        int value = sharedPref.getInt(SAVED_ID,PersonalizedValues.NOT_SET.getValue());
-        return (value != PersonalizedValues.NOT_SET.getValue());
-    }
-
-
-    private int getPersonalizedPreferenceSaved() {
-        SharedPreferences sharedPref = activity.getPreferences(Context.MODE_PRIVATE);
-        int value = sharedPref.getInt(SAVED_ID,PersonalizedValues.NOT_SET.getValue());
-        if (value == PersonalizedValues.NOT_SET.getValue()) {
-            Log.i("godot","AdMob: Preference not saved yet, returning NOT_SET value");
-        }
-        return value;
-    }
-
-//https://itnext.io/android-admob-consent-with-ump-personalized-or-non-personalized-ads-in-eea-3592e192ec90
-    private boolean canShowPersonalizedAds(){
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(activity.getApplicationContext());
-        String purposeConsent = prefs.getString("IABTCF_PurposeConsents", "");
-        String vendorConsent = prefs.getString("IABTCF_VendorConsents","");
-        String vendorLI = prefs.getString("IABTCF_VendorLegitimateInterests","");
-        String purposeLI = prefs.getString("IABTCF_PurposeLegitimateInterests","");
-
-        int googleId = 755;
-        boolean hasGoogleVendorConsent = hasAttribute(vendorConsent, googleId);
-        boolean hasGoogleVendorLI = hasAttribute(vendorLI, googleId);
-
-        List<Integer> indexes = new ArrayList<>();
-        indexes.add(1);
-        indexes.add(3);
-        indexes.add(4);
-
-        List<Integer> indexesLI = new ArrayList<>();
-        indexesLI.add(2);
-        indexesLI.add(7);
-        indexesLI.add(9);
-        indexesLI.add(10);
-
-        return hasConsentFor(indexes, purposeConsent, hasGoogleVendorConsent)
-                && hasConsentOrLegitimateInterestFor(indexesLI, purposeConsent, purposeLI, hasGoogleVendorConsent, hasGoogleVendorLI);
-
-    }
-
-
-    private boolean hasAttribute(String input, int index) {
-        if (input == null) return false;
-        return input.length() >= index && input.charAt(index-1) == '1';
-    }
-
-    private boolean hasConsentFor(List<Integer> indexes, String purposeConsent, boolean hasVendorConsent) {
-        for (Integer p: indexes) {
-            if (!hasAttribute(purposeConsent, p)) {
-                return false;
-            }
-        }
-        return hasVendorConsent;
-    }
-
-    private boolean hasConsentOrLegitimateInterestFor(List<Integer> indexes, String purposeConsent, String purposeLI, boolean hasVendorConsent, boolean hasVendorLI){
-        for (Integer p: indexes) {
-            boolean purposeAndVendorLI = hasAttribute(purposeLI, p) && hasVendorLI;
-            boolean purposeConsentAndVendorConsent = hasAttribute(purposeConsent, p) && hasVendorConsent;
-            boolean isOk = purposeAndVendorLI || purposeConsentAndVendorConsent;
-            if (!isOk){
-                return false;
-            }
-        }
-        return true;
     }
 
     /**
@@ -240,59 +159,8 @@ public class GodotAdMob extends GodotPlugin {
         this.isForChildDirectedTreatment = isForChildDirectedTreatment;
     }
 
-    @UsedByGodot
-    public void manageConsents() {
-        FormCallBackListener listener = new FormCallBackListener() {
-            @Override
-            public void onFormFailedToLoad(int errorCode) {
-                emitSignal("manage_consent_aborted",errorCode);
-            }
-
-            @Override
-            public void onFormDismissed() {
-                setPersonalizedPreferenceByFunction();
-                initWithContentRating();
-            }
-
-            @Override
-            public void onFormNotRequired() { }
-        };
-
-        if (consentInformation == null) {
-            updateConsentInformation(new ConsentInformationUpdateListener() {
-                @Override
-                public void onUpdateFailed(int errorCode) {
-                    emitSignal("manage_consent_aborted",errorCode);
-                }
-
-                @Override
-                public void onUpdateSuccessful() {
-                    activity.runOnUiThread(
-                            () -> initForm(listener));
-                }
-            });
-        } else {
-            activity.runOnUiThread(
-                    () -> initForm(listener));
-        }
-
-    }
-
-
-    private void setPersonalizedPreferenceByFunction() {
-        int value = canShowPersonalizedAds() ? PersonalizedValues.PERSONALIZED.getValue() : PersonalizedValues.NOT_PERSONALIZED.getValue();
-        setPersonalizedPreference(value);
-    }
-
     private void updateConsentInformation(ConsentInformationUpdateListener listener)
     {
-/*        ConsentDebugSettings debugSettings = new ConsentDebugSettings.Builder(activity)
-                .setDebugGeography(ConsentDebugSettings
-                        .DebugGeography
-                        .DEBUG_GEOGRAPHY_NOT_EEA)
-                        .addTestDeviceHashedId(getAdMobDeviceId())
-                                .build();*/
-
         ConsentRequestParameters params = new ConsentRequestParameters
                 .Builder()
                 .setTagForUnderAgeOfConsent(isForChildDirectedTreatment)
@@ -323,73 +191,13 @@ public class GodotAdMob extends GodotPlugin {
         ));
     }
 
-    public void initForm(FormCallBackListener callBackListener) {
-        if (consentInformation != null && consentInformation.isConsentFormAvailable()) {
-            Log.i("godot", "AdMob: Loading form..");
-            activity.runOnUiThread( () ->
-                UserMessagingPlatform.loadConsentForm(
-                        activity,
-                        new UserMessagingPlatform.OnConsentFormLoadSuccessListener() {
-                            @Override
-                            public void onConsentFormLoadSuccess(ConsentForm consentForm) {
-                                Log.i("godot", "AdMob: Consent loaded successfully");
-                                emitSignal("on_form_loaded");
-                                consentForm.show(
-                                        activity,
-                                        new ConsentForm.OnConsentFormDismissedListener() {
-                                            @Override
-                                            public void onConsentFormDismissed(@Nullable FormError formError) {
-                                                // Handle dismissal by reloading form.
-                                                if (formError != null) {
-                                                    Log.i("godot", String.format("AdMob: Form dismissed, error code: %d", formError.getErrorCode()));
-                                                    callBackListener.onFormFailedToLoad(formError.getErrorCode());
-                                                } else {
-                                                    Log.i("godot", "AdMob: Form dismissed");
-                                                    emitSignal("on_form_dismissed");
-                                                    callBackListener.onFormDismissed();
-                                                }
-                                            }
-                                        });
-                            }
-                        },
-                        new UserMessagingPlatform.OnConsentFormLoadFailureListener() {
-                            @Override
-                            public void onConsentFormLoadFailure(FormError formError) {
-                                Log.i("godot", String.format("AdMob: Form load error: %d", formError.getErrorCode()));
-                                emitSignal("on_form_failed_to_load", formError.getErrorCode());
-                                callBackListener.onFormFailedToLoad(formError.getErrorCode());
-                            }
-                        }
-            ));
-        }
-    }
-
-    //To use only if consentinformation is updated properly
-    private boolean isFormRequired() {
-        return consentInformation.getConsentStatus() == ConsentInformation.ConsentStatus.REQUIRED;
-    }
-
     private void initWithContentRating() {
         activity.runOnUiThread(() -> {
             MobileAds.initialize(activity);
 
             this.setRequestConfigurations();
 
-            if (!isPersonalizedPreferenceSet()) {
-                //NON-EEA USERS ONLY will arrive here without having a preference set and a form not required, so it's safe to assume you can show them personalized ads
-                setPersonalizedPreference(PersonalizedValues.PERSONALIZED.getValue());
-            }
-
-            int value = getPersonalizedPreferenceSaved();
-            boolean bool = (value == PersonalizedValues.PERSONALIZED.getValue());
-            if (!bool) {
-                if (extras == null) {
-                    extras = new Bundle();
-                }
-                extras.putString("npa", "1");
-            }
-
-            Log.i("godot", String.format("AdMob: init with content rating: %s (is real: %s, is child directed : %s, personalized ads: %s) ", maxAdContentRating, isReal, isForChildDirectedTreatment, bool));
+            Log.i("godot", String.format("AdMob: init with content rating: %s (is real: %s, is child directed : %s) ", maxAdContentRating, isReal, isForChildDirectedTreatment));
             initialized = true;
         });
     }
@@ -428,31 +236,111 @@ public class GodotAdMob extends GodotPlugin {
 
 
     /**
-     * Returns AdRequest object constructed considering the extras.
-     *
      * @return AdRequest object
      */
     private AdRequest getAdRequest() {
         AdRequest.Builder adBuilder = new AdRequest.Builder();
-        AdRequest adRequest;
-        if (!this.isForChildDirectedTreatment && extras != null) {
-            adBuilder.addNetworkExtrasBundle(AdMobAdapter.class, extras);
-        }
-
-        adRequest = adBuilder.build();
+        AdRequest adRequest = adBuilder.build();
         return adRequest;
     }
 
-    private void tryLoadForm(FormCallBackListener listener) {
-        if (isFormRequired())
-        {
-            activity.runOnUiThread(() -> initForm(listener));
-        } else {
-            listener.onFormNotRequired();
-        }
+    /**
+     * Used on godot side to show only the UMP Form, without the ad after it
+     */
+    @UsedByGodot
+    public void showForm() {
+        Log.i("godot","Showing form..");
+        initForm(null,true);
     }
 
+    private void initForm(Runnable onSuccessfullyDismissedFun,boolean forceForm) {
+        //a bit of weird recursive shenanigans, to see if can be done better
+        //if consentInformation isn't updated, it tries to update and if successful then recalls this function with same args
+        if (consentInformation == null) {
+            updateConsentInformation(new ConsentInformationUpdateListener() {
+                @Override
+                public void onUpdateFailed(int errorCode) {
+                    //fires form_failed_to_load instead of hypothetical "consent_info_update_failed" because godot really shouldn't care which part of it failed
+                    emitSignal("on_form_failed_to_load", errorCode);
+                }
+                @Override
+                public void onUpdateSuccessful() {
+                    initForm(onSuccessfullyDismissedFun,forceForm);
+                }
+            });
+            return;
+        }
 
+
+        FormCallBackListener callBackListener = new FormCallBackListener() {
+            @Override
+            public void onFormFailedToLoad(int errorCode) {
+                emitSignal("on_form_failed_to_load", errorCode);
+            }
+
+            @Override
+            public void onFormSuccessfullyDismissed() {
+                //at this point, consentInformation should be updated
+                if(!consentInformation.canRequestAds()) {
+                    Log.w("godot", "AdMob: Can't request ads on this device (consent denied)");
+                    return;
+                }
+
+                if (!initialized) {
+                    initWithContentRating();
+                }
+                if (onSuccessfullyDismissedFun != null) {
+                    onSuccessfullyDismissedFun.run();
+                }
+                }
+            };
+
+        if (!isFormRequired() && !forceForm) {
+            callBackListener.onFormSuccessfullyDismissed();
+            return;
+        }
+
+        Log.i("godot", "AdMob: Loading form..");
+        activity.runOnUiThread( () ->
+                UserMessagingPlatform.loadConsentForm(
+                        activity,
+                        new UserMessagingPlatform.OnConsentFormLoadSuccessListener() {
+                            @Override
+                            public void onConsentFormLoadSuccess(ConsentForm consentForm) {
+                                Log.i("godot", "AdMob: Consent loaded successfully");
+                                emitSignal("on_form_loaded");
+                                consentForm.show(
+                                        activity,
+                                        new ConsentForm.OnConsentFormDismissedListener() {
+                                            @Override
+                                            public void onConsentFormDismissed(@Nullable FormError formError) {
+                                                if (formError != null) {
+                                                    Log.i("godot", String.format("AdMob: Form dismissed, error code: %d", formError.getErrorCode()));
+                                                    callBackListener.onFormFailedToLoad(formError.getErrorCode());
+                                                } else {
+                                                    Log.i("godot", "AdMob: Form dismissed");
+                                                    emitSignal("on_form_dismissed");
+                                                    callBackListener.onFormSuccessfullyDismissed();
+                                                }
+                                            }
+                                        });
+                            }
+                        },
+                        new UserMessagingPlatform.OnConsentFormLoadFailureListener() {
+                            @Override
+                            public void onConsentFormLoadFailure(FormError formError) {
+                                Log.i("godot", String.format("AdMob: Form load error: %d", formError.getErrorCode()));
+                                emitSignal("on_form_failed_to_load", formError.getErrorCode());
+                                callBackListener.onFormFailedToLoad(formError.getErrorCode());
+                            }
+                        }
+                ));
+    }
+
+    //To use only if consentinformation is updated properly
+    private boolean isFormRequired() {
+        return consentInformation.getConsentStatus() == ConsentInformation.ConsentStatus.REQUIRED;
+    }
     /* Rewarded Video
      * ********************************************************************** */
 
@@ -463,92 +351,53 @@ public class GodotAdMob extends GodotPlugin {
      */
     @UsedByGodot
     public void loadRewardedVideo(final String id) {
-
-        FormCallBackListener listener = new FormCallBackListener() {
-            @Override
-            public void onFormFailedToLoad(int errorCode) {
-                emitSignal("on_rewarded_video_failed_to_load", errorCode); //Same signals as actual rewarded to streamline error handling on godot-side
-            }
-
-            @Override
-            public void onFormDismissed() {
-                int value = canShowPersonalizedAds() ? PersonalizedValues.PERSONALIZED.getValue() : PersonalizedValues.NOT_PERSONALIZED.getValue();
-                setPersonalizedPreference(value);
-                onFormNotRequired();
-            }
-
-            @Override
-            public void onFormNotRequired() {
-                if (!initialized) {
-                    initWithContentRating();
-                }
-                loadRewardedVideoNoForm(id);
-            }
-        };
-
-        if (consentInformation == null) {
-            updateConsentInformation(new ConsentInformationUpdateListener()
-            {
-                @Override
-                public void onUpdateFailed(int errorCode) {
-                    emitSignal("on_rewarded_video_failed_to_load",errorCode); //Same signals as actual rewarded to streamline error handling on godot-side
-                }
-
-                @Override
-                public void onUpdateSuccessful() {
-                    tryLoadForm(listener);
-                }
-            });
-        } else {
-            tryLoadForm(listener);
-        }
+        initForm(
+                () -> loadRewardedVideoNoForm(id), false
+        );
     }
 
 
     private void loadRewardedVideoNoForm(final String id) {
-        activity.runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                rewardedVideo = new RewardedVideo(activity, new GodotRewardedVideoListener() {
-                    @Override
-                    public void onRewardedVideoLoaded() {
-                        emitSignal("on_rewarded_video_loaded");
-                        Log.i("godot", "AdMob: onRewardedVideoLoaded");
-                    }
+        activity.runOnUiThread(() -> {
+            rewardedVideo = new RewardedVideo(activity, new GodotRewardedVideoListener() {
+                @Override
+                public void onRewardedVideoLoaded() {
+                    emitSignal("on_rewarded_video_loaded");
+                    Log.i("godot", "AdMob: onRewardedVideoLoaded");
+                }
 
-                    @Override
-                    public void onRewardedVideoFailedToLoad(LoadAdError errorCode) {
-                        emitSignal("on_rewarded_video_failed_to_load", errorCode.getCode());
-                        Log.i("godot", String.format("AdMob: onRewardedVideoFailedToLoad (reason: %s)(error code: %d)",errorCode.getMessage(),errorCode.getCode()));
-                    }
+                @Override
+                public void onRewardedVideoFailedToLoad(LoadAdError errorCode) {
+                    emitSignal("on_rewarded_video_failed_to_load", errorCode.getCode());
+                    Log.i("godot", String.format("AdMob: onRewardedVideoFailedToLoad (reason: %s)(error code: %d)",errorCode.getMessage(),errorCode.getCode()));
+                }
 
-                    @Override
-                    public void onRewardedVideoFailedToShow(AdError errorCode) {
-                        emitSignal("on_rewarded_video_failed_to_show", errorCode.getCode());
-                        Log.i("godot", String.format("AdMob: onRewardedVideoFailedToShow (reason: %s)(error code: %d)",errorCode.getMessage(),errorCode.getCode()));
-                    }
+                @Override
+                public void onRewardedVideoFailedToShow(AdError errorCode) {
+                    emitSignal("on_rewarded_video_failed_to_show", errorCode.getCode());
+                    Log.i("godot", String.format("AdMob: onRewardedVideoFailedToShow (reason: %s)(error code: %d)",errorCode.getMessage(),errorCode.getCode()));
+                }
 
-                    @Override
-                    public void onRewardedVideoOpened() {
-                        emitSignal("on_rewarded_video_opened");
-                        Log.i("godot", "AdMob: onRewardedVideoOpened");
-                    }
+                @Override
+                public void onRewardedVideoOpened() {
+                    emitSignal("on_rewarded_video_opened");
+                    Log.i("godot", "AdMob: onRewardedVideoOpened");
+                }
 
-                    @Override
-                    public void onRewardedVideoDismissed() {
-                        emitSignal("on_rewarded_video_dismissed");
-                        Log.i("godot", "AdMob: onRewardedVideoDismissed");
-                    }
+                @Override
+                public void onRewardedVideoDismissed() {
+                    emitSignal("on_rewarded_video_dismissed");
+                    Log.i("godot", "AdMob: onRewardedVideoDismissed");
+                }
 
-                    @Override
-                    public void onRewardedVideoEarnedReward(String type, int amount) {
-                        emitSignal("on_rewarded_video_earned_reward", type, amount);
-                        Log.i("godot", String.format("AdMob: onRewardedVideoEarnedReward(%s : %d)",type,amount));
-                    }
-                });
+                @Override
+                public void onRewardedVideoEarnedReward(String type, int amount) {
+                    emitSignal("on_rewarded_video_earned_reward", type, amount);
+                    Log.i("godot", String.format("AdMob: onRewardedVideoEarnedReward(%s : %d)",type,amount));
+                }
+            });
 
-                rewardedVideo.load(id, getAdRequest());
-            }
+            rewardedVideo.load(id, getAdRequest());
         });
     }
 
@@ -581,43 +430,9 @@ public class GodotAdMob extends GodotPlugin {
     @UsedByGodot
     public void loadBanner(final String id, final boolean isOnTop, final String bannerSize)
     {
-        FormCallBackListener listener = new FormCallBackListener() {
-            @Override
-            public void onFormFailedToLoad(int errorCode) {
-                emitSignal("on_admob_banner_failed_to_load", errorCode); //Same signals as actual banner to streamline error handling on godot-side
-            }
-
-            @Override
-            public void onFormDismissed() {
-                setPersonalizedPreferenceByFunction();
-                onFormNotRequired();
-            }
-
-            @Override
-            public void onFormNotRequired() {
-                if (!initialized) {
-                    initWithContentRating();
-                }
-                loadBannerNoForm(id,isOnTop,bannerSize);
-            }
-        };
-
-        if (consentInformation == null) {
-            updateConsentInformation(new ConsentInformationUpdateListener()
-            {
-                @Override
-                public void onUpdateFailed(int errorCode) {
-                    emitSignal("on_admob_banner_failed_to_load",errorCode); //Same signals as actual banner to streamline error handling on godot-side
-                }
-
-                @Override
-                public void onUpdateSuccessful() {
-                    tryLoadForm(listener);
-                }
-            });
-        } else {
-            tryLoadForm(listener);
-        }
+        initForm(
+                () -> loadBannerNoForm(id,isOnTop,bannerSize) , false
+        );
 
     }
 
@@ -737,49 +552,14 @@ public class GodotAdMob extends GodotPlugin {
     /**
      * Load a interstitial
      *
-     * @param id AdMod Interstitial ID
+     * @param id AdMob Interstitial ID
      */
     @UsedByGodot
     public void loadInterstitial(final String id) {
+        initForm(
+                () -> loadInterstitialNoForm(id) , false
+        );
 
-        FormCallBackListener listener = new FormCallBackListener() {
-            @Override
-            public void onFormFailedToLoad(int errorCode) {
-                emitSignal("on_interstitial_failed_to_load", errorCode); //Same signals as actual interstitial to streamline error handling on godot-side
-            }
-
-            @Override
-            public void onFormDismissed() {
-                int value = canShowPersonalizedAds() ? PersonalizedValues.PERSONALIZED.getValue() : PersonalizedValues.NOT_PERSONALIZED.getValue();
-                setPersonalizedPreference(value);
-                onFormNotRequired();
-            }
-
-            @Override
-            public void onFormNotRequired() {
-                if (!initialized) {
-                    initWithContentRating();
-                }
-                loadInterstitialNoForm(id);
-            }
-        };
-
-        if (consentInformation == null) {
-            updateConsentInformation(new ConsentInformationUpdateListener()
-            {
-                @Override
-                public void onUpdateFailed(int errorCode) {
-                    emitSignal("on_interstitial_failed_to_load",errorCode); //Same signals as actual interstitial to streamline error handling on godot-side
-                }
-
-                @Override
-                public void onUpdateSuccessful() {
-                    tryLoadForm(listener);
-                }
-            });
-        } else {
-            tryLoadForm(listener);
-        }
     }
 
     private void loadInterstitialNoForm(final String id) {
