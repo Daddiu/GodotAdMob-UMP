@@ -44,7 +44,6 @@ This plugin supports:
   Here
   </application>
   ```
-
 <h3>HOW TO USE</h3>
 
 - Setup the AdMob Node in your game by adding it into your scene
@@ -65,6 +64,14 @@ This plugin supports:
   >[!NOTE]
   >Both interstitial and rewarded ads will emit signals when they are being shown and when the they are being dismissed, you should use those signals to pause and resume your game
 
+<h3>COMPILING</h3>
+If you want to compile it yourself (not required):
+
+- Clone this repository.
+- Open the command line.
+- Go the root directory of the cloned repository.
+- Run ```gradlew build```
   
+  If everything goes fine, you should find your AARs files in the ```godotadmob\build\outputs\aar``` folder
 
 
