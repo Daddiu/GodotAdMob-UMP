@@ -51,6 +51,8 @@ This plugin supports:
   > I recommend to make it a singleton by going into Project -> Project Settings -> Autoload and adding the script there, but it's not stricly required
 
 - Modify the banner_id,interstitial_id and rewarded_id to use your own id, found in your AdMob page (the default ones will only fires test ads)
+  >[!NOTE]
+  > Make sure when shipping your game to set "isReal" property to true, otherwise it will treat any device as a developer device and will not generate you revenue
   
 - Load the type of ads you need with either ```load_interstitial()```, ```load_rewarded_video()``` or ```load_banner()```
   >[!WARNING]
