@@ -13,15 +13,15 @@ This plugin supports:
 
 <h3>HOW TO INSTALL</h3>
 
-- Go to the [release](https://github.com/Daddiu/GodotAdMob-UMP/edit/Daddiu-readmework/README.md) tab, choose the version and download both the GodotAdMob-UMP and admob-godotlib zips.
+- Go to the [release](https://github.com/Daddiu/GodotAdMob-UMP/edit/Daddiu-readmework/README.md) tab, choose the version and download both the GodotAdMob-UMP and admob-godotlib zips
 - Install the Android Build Template from "Project" -> "Install Android Build Template" if you haven't already (more about it [here](https://docs.godotengine.org/en/stable/tutorials/export/android_custom_build.html))
 - Unzip the contents of the GodotAdMob-UMP package into your project's ``` res://android/plugins ``` folder
 - Unzip the contents of the admob-godotlib package into your project's root folder
 - Go to on the Project -> Export... -> Android -> Options
-  - Under "Custom Build" check that "Use Custom Build" is checked.
-  - under "Plugins" check that "GodotAdMob" is checked.
-  - Under "Permissions" check that "Access Network State" and "Internet" are both checked.
-- Edit ```res://android/build/AndroidManifest.xml``` to add your appID.
+  - Under "Custom Build" check that "Use Custom Build" is checked
+  - under "Plugins" check that "GodotAdMob" is checked
+  - Under "Permissions" check that "Access Network State" and "Internet" are both checked
+- Edit ```res://android/build/AndroidManifest.xml``` to add your appID
   > [!NOTE]
   > In Godot 3 .xml files aren't visible from the editor, you should open it from your OS file explorer
 
@@ -69,9 +69,9 @@ This plugin supports:
 <h3>COMPILING</h3>
 If you want to compile it yourself (not required):
 
-- Clone this repository.
-- Open the command line.
-- Go the root directory of the cloned repository.
+- Clone this repository
+- Open the command line
+- Go the root directory of the cloned repository
 - Run ```gradlew build```
   
   If everything goes fine, you should find your AARs files in the ```godotadmob\build\outputs\aar``` folder
