@@ -58,9 +58,9 @@ This plugin supports:
   >[!WARNING]
   > You should always load ads way before you actually show them, preferably during loadings or such
 
-- Anytime an ad will be loaded, the linked signal will be emitted(so "on_interstitial_loaded" will be emitted if you load an interstitial)
+- Anytime an ad will be loaded, the linked signal will be emitted(so ```on_interstitial_loaded``` will be emitted if you load an interstitial)
   >[!NOTE]
-  >If an ad could not be loaded for some reason, the linked error signal will be emitted instead(so "on_interstitial_failed_to_load" will be emitted if you load an interstitial)
+  >If an ad could not be loaded for some reason, the linked error signal will be emitted instead(so ```on_interstitial_failed_to_load``` will be emitted if you load an interstitial)
   
 - Once the ad is loaded, you can show it with either ```show_interstitial()```, ```show_rewarded_video()``` or ```show_banner()```, depending on the type of ad you loaded
   >[!NOTE]
