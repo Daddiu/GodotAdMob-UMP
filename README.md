@@ -45,7 +45,7 @@ This plugin supports:
   </application>
   ```
 
-  <h3>HOW TO USE</h3>
+<h3>HOW TO USE</h3>
 
 - Setup the AdMob Node in your game by adding it into your scene
   >[!NOTE]
