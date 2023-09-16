@@ -21,7 +21,7 @@ This plugin supports:
   - Under "Custom Build" check that "Use Custom Build" is checked.
   - under "Plugins" check that "GodotAdMob" is checked.
   - Under "Permissions" check that "Access Network State" and "Internet" are both checked.
-- Edit ```res://android/build/AndroidManifest.xml ``` to add your appID.
+- Edit ```res://android/build/AndroidManifest.xml``` to add your appID.
   > [!NOTE]
   > In Godot 3 .xml files aren't visible from the editor, you should open it from your OS file explorer
 
