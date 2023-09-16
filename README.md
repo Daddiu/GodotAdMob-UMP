@@ -23,7 +23,10 @@ This plugin supports:
   - Under "Permissions" check that "Access Network State" and "Internet" are both checked.
 - Edit ```res://android/build/AndroidManifest.xml ``` to add your appID.
 > [!NOTE]
-> Highlights information that users should take into account, even when skimming.
+  > In Godot 3 .xml files aren't visible from the editor, you should open it from your OS file explorer
+
+  > [!NOTE]
+  > If you want to test ads without using your appID, you should use this appID which only fires test ads (more about it [here](https://developers.google.com/admob/android/quick-start#update_your_androidmanifestxml))
 
   ```
   <meta-data android:name="com.google.android.gms.ads.APPLICATION_ID"
