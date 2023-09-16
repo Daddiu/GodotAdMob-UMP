@@ -2,7 +2,7 @@
 
 Based on commit [#676b6ab](https://github.com/Shin-NiL/Godot-Android-Admob-Plugin/commit/676b6ab42d2eb212fffc47fce85cb09de47ab9b1) by [Shin-NiL](https://github.com/Shin-NiL/Godot-Android-Admob-Plugin).
 
-Godot plugin to use AdMob and UMP into your game. UMP is used to get consent from people living within EEA countries (https://developers.google.com/admob/android/privacy?hl=en).
+Godot plugin to use AdMob and UMP (User Messaging Platform) into your game. UMP is used to get consent from people living within EEA countries (https://developers.google.com/admob/android/privacy?hl=en).
 
 Created originally to be used only in [Wacky Volleyball](https://play.google.com/store/apps/details?id=wacky.volleyball) i decided to make it public in case someone needs it for their game.
 
@@ -57,6 +57,9 @@ This plugin supports:
 - Load the type of ads you need with either ```load_interstitial()```, ```load_rewarded_video()``` or ```load_banner()```
   >[!WARNING]
   > You should always load ads way before you actually show them, preferably during loadings or such
+
+  >[!NOTE]
+  > If the user lives within EEA countries, before loading any ad for the first time ever, it will ask the user for consent through the UMP
 
 - Anytime an ad will be loaded, the linked signal will be emitted(so ```on_interstitial_loaded``` will be emitted if you load an interstitial)
   >[!NOTE]
